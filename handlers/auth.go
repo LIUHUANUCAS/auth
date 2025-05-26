@@ -280,7 +280,7 @@ func (h *AuthHandler) WeChatLogin(c *gin.Context) {
 		RefreshToken: refreshToken,
 		ExpiresIn:    15 * 60, // 15 minutes in seconds
 	}
-	fmt.Println("WeChat login successful, user ID:", tokenResp)
+	// fmt.Println("WeChat login successful, user ID:", tokenResp)
 	// Return the tokens
 	c.JSON(http.StatusOK, tokenResp)
 }
