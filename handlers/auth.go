@@ -275,11 +275,12 @@ func (h *AuthHandler) WeChatLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to store refresh token"})
 		return
 	}
-
-	// Return the tokens
-	c.JSON(http.StatusOK, TokenResponse{
+	tokenResp := TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		ExpiresIn:    15 * 60, // 15 minutes in seconds
-	})
+	}
+	// fmt.Println("WeChat login successful, user ID:", tokenResp)
+	// Return the tokens
+	c.JSON(http.StatusOK, tokenResp)
 }
