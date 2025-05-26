@@ -35,7 +35,8 @@ type JWTConfig struct {
 
 // ServerConfig holds server configuration
 type ServerConfig struct {
-	Port string
+	Port     string
+	ProxyURL string
 }
 
 // GetConfig returns the application configuration
@@ -52,7 +53,8 @@ func GetConfig() *Config {
 			RefreshTokenTTL: 7 * 24 * time.Hour,
 		},
 		Server: ServerConfig{
-			Port: "8080",
+			Port:     "8081",
+			ProxyURL: "http://localhost:8080",
 		},
 		WeChat: WeChatConfig{
 			AppID:     os.Getenv("WECHAT_APPID"),

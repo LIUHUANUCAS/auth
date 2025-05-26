@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/LIUHUANUCAS/auth/config"
 	"github.com/LIUHUANUCAS/auth/handlers"
@@ -57,6 +59,25 @@ func main() {
 		})
 	})
 
+	// Create reverse proxy for localhost:8081
+	targetURL, err := url.Parse(cfg.Server.ProxyURL)
+	if err != nil {
+		log.Fatalf("Failed to parse target URL: %v", err)
+	}
+	proxy := httputil.NewSingleHostReverseProxy(targetURL)
+
+	// Handler function for reverse proxy
+	proxyHandler := func(c *gin.Context) {
+		// Update the request URL
+		c.Request.URL.Host = targetURL.Host
+		c.Request.URL.Scheme = targetURL.Scheme
+		c.Request.Header.Set("X-Forwarded-Host", c.Request.Header.Get("Host"))
+		c.Request.Host = targetURL.Host
+
+		// Serve the request using the reverse proxy
+		proxy.ServeHTTP(c.Writer, c.Request)
+	}
+
 	// Public routes
 	router.POST("/register", authHandler.Register)
 	router.POST("/login", authHandler.Login)
@@ -78,6 +99,13 @@ func main() {
 				"user_id": userID,
 			})
 		})
+
+		// Proxy routes that require authentication
+		protected.GET("/v1/daily_house", proxyHandler)
+		protected.GET("/v1/month_house", proxyHandler)
+		protected.GET("/v2/sh/new_daily_house", proxyHandler)
+		protected.GET("/v2/sh/old_daily_house", proxyHandler)
+		protected.GET("/v3/fortune/daily", proxyHandler)
 	}
 
 	// Start the server
