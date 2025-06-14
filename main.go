@@ -102,6 +102,8 @@ func main() {
 
 		// Proxy routes that require authentication
 		protected.GET("/v1/daily_house", proxyHandler)
+		protected.GET("/v1/daily_new_house", proxyHandler)
+		protected.GET("/v1/daily_unfinished_house", proxyHandler)
 		protected.GET("/v1/month_house", proxyHandler)
 		protected.GET("/v2/sh/new_daily_house", proxyHandler)
 		protected.GET("/v2/sh/old_daily_house", proxyHandler)
