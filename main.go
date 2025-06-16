@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/LIUHUANUCAS/auth/config"
 	"github.com/LIUHUANUCAS/auth/handlers"
@@ -19,6 +23,7 @@ import (
 func main() {
 	// Load configuration
 	cfg := config.GetConfig()
+	ctx := context.Background()
 
 	// Initialize Redis client
 	redisClient := redis.NewClient(&redis.Options{
@@ -110,9 +115,36 @@ func main() {
 		protected.GET("/v3/fortune/daily", proxyHandler)
 	}
 
-	// Start the server
-	log.Printf("Starting server on port %s", cfg.Server.Port)
-	if err := router.Run(":" + cfg.Server.Port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	srv := &http.Server{
+		Addr:    ":" + cfg.Server.Port,
+		Handler: router,
 	}
+
+	listener, err := newNgrokListener(ctx, cfg)
+	if err != nil {
+		log.Fatalf("new listner err:%s\n", err)
+	}
+	defer listener.Close()
+
+	go func() {
+		log.Println("Starting server on", listener.Addr(), listener.Addr().String(), "port:", cfg.Server.Port)
+		if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shut down the server
+	quit := make(chan os.Signal, 1)
+	// Accept graceful shutdown signals
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("Server forced to shutdown: %s\n", err)
+	}
+	log.Println("Server exiting")
+
 }
