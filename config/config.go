@@ -11,6 +11,7 @@ type Config struct {
 	JWT    JWTConfig
 	Server ServerConfig
 	WeChat WeChatConfig
+	Ngrok  NgrokConfig
 }
 
 // WeChatConfig holds WeChat Mini Program configuration
@@ -39,6 +40,10 @@ type ServerConfig struct {
 	ProxyURL string
 }
 
+type NgrokConfig struct {
+	HostName string
+}
+
 // GetConfig returns the application configuration
 func GetConfig() *Config {
 	return &Config{
@@ -59,6 +64,9 @@ func GetConfig() *Config {
 		WeChat: WeChatConfig{
 			AppID:     os.Getenv("WECHAT_APPID"),
 			AppSecret: os.Getenv("WECHAT_APPSECRET"),
+		},
+		Ngrok: NgrokConfig{
+			HostName: os.Getenv("HOST_NAME"), //"https://mosquito-selected-macaw.ngrok-free.app",
 		},
 	}
 }
